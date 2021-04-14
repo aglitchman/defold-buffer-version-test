@@ -1,0 +1,2 @@
+[{"name": "position", "type": "float32", "count": 3, "data": []},
+{"name": "color", "type": "float32", "count": 4, "data": []}]

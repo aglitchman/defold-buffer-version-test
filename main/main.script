@@ -1,0 +1,47 @@
+local chunks_ids = require("main.chunks.chunks")
+
+function init(self)
+    self.angle = 0
+end
+
+function final(self)
+end
+
+function update(self, dt)
+    local angle = self.angle
+    local scale = 16
+    local center_x = 480
+    local pos_y = 320
+    local off_xy = 22
+    local j = 1
+    for i, chunk_id in ipairs(chunks_ids.chunks) do
+        local url = msg.url("/chunks/meshes#" .. chunk_id .. "_mesh")
+        local vertices_res = go.get("/chunks/meshes#" .. chunk_id .. "_mesh", "vertices")
+
+        local color = vmath.vector3(1, 0.77, 0)
+        local pos_x = (j - 10) * off_xy + center_x
+
+        local buf = ext.make_triangle(color.x, color.y, color.z, pos_x, pos_y, scale, angle)
+        resource.set_buffer(vertices_res, buf)
+        ext.free_buffer(buf)
+
+        angle = angle + math.pi / 20
+
+        j = j + 1
+        if j > 20 then
+            pos_y = pos_y - off_xy
+            j = 1
+        end
+    end
+
+    self.angle = self.angle - math.pi / 300
+end
+
+function on_message(self, message_id, message, sender)
+end
+
+function on_input(self, action_id, action)
+end
+
+function on_reload(self)
+end

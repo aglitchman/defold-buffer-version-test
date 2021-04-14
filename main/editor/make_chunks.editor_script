@@ -1,0 +1,132 @@
+local M = {}
+
+local function ends_with(str, ending)
+    return ending == "" or str:sub(-#ending) == ending
+end
+
+local function save_contents(filepath, contents)
+    local f, err = io.open(filepath, "w")
+    if f == nil then
+        error("Can't save file " .. filepath .. " (" .. tostring(err) .. ")")
+    end
+    f:write(contents)
+    f:close()
+end
+
+function M.get_commands()
+    return {
+        {
+            label = "Make Chunks",
+            locations = {"Edit", "Assets"},
+            query = {selection = {type = "resource", cardinality = "one"}},
+            active = function(opts)
+                local path = string.lower(editor.get(opts.selection, "path"))
+                return ends_with(path, "main.collection")
+            end,
+            run = function(opts)
+                local path = editor.get(opts.selection, "path")
+                path = path:sub(2)
+
+                local output_dir = path:sub(1, -string.len("main.collection") - 1) .. "chunks"
+
+                local collection = ""
+                local chunks_lua = ""
+
+                local count = 0
+                for i = 1, 100 do
+                    local id = string.format("c%04d", i)
+
+                    collection = collection .. 
+                    '  "embedded_components {\\n"\n' ..
+                    '  "  id: \\"' .. id .. '_mesh\\"\\n"\n' ..
+                    '  "  type: \\"mesh\\"\\n"\n' ..
+                    '  "  data: \\"material: \\\\\\"/main/materials/chunk.material\\\\\\"\\\\n"\n' ..
+                    '  "vertices: \\\\\\"/' .. output_dir .. '/chunk_' .. id .. '.buffer\\\\\\"\\\\n"\n' ..
+                    -- '  "textures: \\\\\\"/main/assets/chunks_texture.png\\\\\\"\\\\n"\n' ..
+                    '  "primitive_type: PRIMITIVE_TRIANGLES\\\\n"\n' ..
+                    '  "position_stream: \\\\\\"position\\\\\\"\\\\n"\n' ..
+                    -- '  "normal_stream: \\\\\\"normal\\\\\\"\\\\n"\n' ..
+                    '  "\\"\\n"\n' ..
+                    '  "  position {\\n"\n' ..
+                    '  "    x: 0.0\\n"\n' ..
+                    '  "    y: 0.0\\n"\n' ..
+                    '  "    z: 0.0\\n"\n' ..
+                    '  "  }\\n"\n' ..
+                    '  "  rotation {\\n"\n' ..
+                    '  "    x: 0.0\\n"\n' ..
+                    '  "    y: 0.0\\n"\n' ..
+                    '  "    z: 0.0\\n"\n' ..
+                    '  "    w: 1.0\\n"\n' ..
+                    '  "  }\\n"\n' ..
+                    '  "}\\n"\n'
+
+                    chunks_lua = chunks_lua .. '"' .. id .. '", '
+
+                    save_contents(output_dir .. "/chunk_" .. id .. ".buffer", 
+                        '[{"name": "position", "type": "float32", "count": 3, "data": []},\n' ..
+                        '{"name": "color", "type": "float32", "count": 4, "data": []}]')
+
+                    count = count + 1
+                end
+
+                collection = 'name: "chunks"' ..
+                             'scale_along_z: 0\n' ..
+                             'embedded_instances {\n' ..
+                             '  id: "meshes"\n' ..
+                             '  data: ' .. collection .. '  ""\n' ..
+                             '  position {\n' ..
+                             '    x: 0.0\n' ..
+                             '    y: 0.0\n' ..
+                             '    z: 0.0\n' ..
+                             '  }\n' ..
+                             '  rotation {\n' ..
+                             '    x: 0.0\n' ..
+                             '    y: 0.0\n' ..
+                             '    z: 0.0\n' ..
+                             '    w: 1.0\n' ..
+                             '  }\n' ..
+                             '  scale3 {\n' ..
+                             '    x: 1.0\n' ..
+                             '    y: 1.0\n' ..
+                             '    z: 1.0\n' ..
+                             '  }\n' ..
+                             '}\n' ..
+                             '\n'
+
+                chunks_lua = 'local M = {}\n\n' ..
+                             'M.chunks = {' .. chunks_lua .. '}\n\n' ..
+                             'return M'
+
+                save_contents(output_dir .. "/chunks.collection", collection)
+                save_contents(output_dir .. "/chunks.lua", chunks_lua)
+
+                print("INFO:MAKE_CHUNKS: Generated " .. count .." meshes and buffers into path " .. output_dir)
+
+                if editor.platform == "x86_64-win32" then
+                    output_dir = output_dir:gsub("/", "\\")
+                    return {
+                        {
+                            action = "shell",
+                            command = {
+                                "cmd", "/C", "if", "not", "exist", output_dir, "md", output_dir
+                            }
+                        }
+                    }
+                elseif editor.platform == "x86_64-darwin" or editor.platform == "x86_64-linux" then
+                    return {
+                        {
+                            action = "shell",
+                            command = {
+                                "mkdir", "-p", output_path
+                            }
+                        }
+                    }
+                else
+                    error("ERROR: Not supported platform")
+                end
+            end
+        }
+    }
+end
+
+return M
