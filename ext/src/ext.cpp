@@ -7,14 +7,8 @@
 
 static void DbgBreak() { *((volatile unsigned *)0) = 0x0; }
 
-#define CHECK_BUF_OK(_call)                                                                                            \
-    {                                                                                                                  \
-        dmBuffer::Result r = _call;                                                                                    \
-        if (r != dmBuffer::RESULT_OK) {                                                                                \
-            dmLogError("Can't create buffer or get stream: %d, line %d", r, __LINE__);                                 \
-            DbgBreak();                                                                                                \
-        }                                                                                                              \
-    }
+static int buffers_created = 0;
+static int buffers_freed = 0;
 
 static dmBuffer::HBuffer GenTriBuf(float r, float g, float b, float t_x, float t_y, float scale, float angle) {
     static dmhash_t stream_position = dmHashString64("position");
@@ -24,15 +18,31 @@ static dmBuffer::HBuffer GenTriBuf(float r, float g, float b, float t_x, float t
         {stream_color, dmBuffer::VALUE_TYPE_FLOAT32, 4},
     };
     dmBuffer::HBuffer hbuffer = 0;
-    CHECK_BUF_OK(dmBuffer::Create(3, streams_decl, 2, &hbuffer));
+    if (dmBuffer::Create(3, streams_decl, 2, &hbuffer) != dmBuffer::RESULT_OK) {
+        dmLogFatal("Can't create buffer: %d, line %d; buffers created %d, freed %d.", r, __LINE__, buffers_created,
+                   buffers_freed);
+        DbgBreak();
+    }
+    // dmLogInfo("Created buffer #%u", hbuffer & 0xffff);
+
+    buffers_created++;
 
     float *positions = 0;
     float *colors = 0;
     uint32_t count = 0;
     uint32_t components = 0;
     uint32_t stride = 0;
-    CHECK_BUF_OK(dmBuffer::GetStream(hbuffer, stream_position, (void **)&positions, &count, &components, &stride));
-    CHECK_BUF_OK(dmBuffer::GetStream(hbuffer, stream_color, (void **)&colors, NULL, NULL, NULL));
+    if (dmBuffer::GetStream(hbuffer, stream_position, (void **)&positions, &count, &components, &stride) !=
+        dmBuffer::RESULT_OK) {
+        dmLogFatal("Can't get stream: %d, line %d, buffer #%u; buffers created %d, freed %d.", r, __LINE__,
+                   hbuffer & 0xffff, buffers_created, buffers_freed);
+        DbgBreak();
+    }
+    if (dmBuffer::GetStream(hbuffer, stream_color, (void **)&colors, NULL, NULL, NULL) != dmBuffer::RESULT_OK) {
+        dmLogFatal("Can't get stream: %d, line %d, buffer #%u; buffers created %d, freed %d.", r, __LINE__,
+                   hbuffer & 0xffff, buffers_created, buffers_freed);
+        DbgBreak();
+    }
 
     glm::mat4 matrix = glm::mat4(1.0);
     matrix = glm::translate(matrix, glm::vec3(t_x, t_y, 0.0f));
@@ -90,7 +100,10 @@ static int FreeBuffer(lua_State *L) {
     DM_LUA_STACK_CHECK(L, 0);
 
     dmBuffer::HBuffer hbuffer = dmScript::CheckBuffer(L, 1)->m_Buffer;
+    // dmLogInfo("Destroy buffer #%u", hbuffer & 0xffff);
     dmBuffer::Destroy(hbuffer);
+
+    buffers_freed++;
 
     return 0;
 }
