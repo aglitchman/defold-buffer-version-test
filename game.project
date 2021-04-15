@@ -21,4 +21,5 @@ max_count = 200
 
 [html5]
 scale_mode = fit
+engine_arguments = --verify-graphics-calls=false
 
