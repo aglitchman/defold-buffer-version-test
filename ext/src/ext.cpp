@@ -16,7 +16,7 @@ static void DbgBreak() { *((volatile unsigned *)0) = 0x0; }
         }                                                                                                              \
     }
 
-dmBuffer::HBuffer GenTriBuf(float r, float g, float b, float t_x, float t_y, float scale, float angle) {
+static dmBuffer::HBuffer GenTriBuf(float r, float g, float b, float t_x, float t_y, float scale, float angle) {
     static dmhash_t stream_position = dmHashString64("position");
     static dmhash_t stream_color = dmHashString64("color");
     const dmBuffer::StreamDeclaration streams_decl[] = {
@@ -76,8 +76,12 @@ static int MakeTriangle(lua_State *L) {
     float scale = luaL_checknumber(L, 6);
     float angle = luaL_checknumber(L, 7);
 
-    dmScript::LuaHBuffer lua_buf = {{GenTriBuf(r, g, b, t_x, t_y, scale, angle)}, {dmScript::OWNER_C}};
-    dmScript::PushBuffer(L, lua_buf);
+    dmBuffer::HBuffer hbuffer = GenTriBuf(r, g, b, t_x, t_y, scale, angle);
+    if (lua_toboolean(L, 8) == true) {
+        dmScript::PushBuffer(L, {{hbuffer}, {dmScript::OWNER_LUA}});
+    } else {
+        dmScript::PushBuffer(L, {{hbuffer}, {dmScript::OWNER_C}});
+    }
 
     return 1;
 }

@@ -1,4 +1,5 @@
 local chunks_ids = require("main.chunks.chunks")
+local rgbhsl = require("main.rgbhsl")
 
 function init(self)
     self.angle = 0
@@ -8,22 +9,26 @@ function final(self)
 end
 
 function update(self, dt)
+    local color = vmath.vector3(1, 0.77, 0)
+    local hsl = vmath.vector3(rgbhsl.rgbToHsl(color.x, color.y, color.z))
+
     local angle = self.angle
     local scale = 16
     local center_x = 480
-    local pos_y = 320
+    local pos_y = 400
     local off_xy = 22
     local j = 1
     for i, chunk_id in ipairs(chunks_ids.chunks) do
-        local url = msg.url("/chunks/meshes#" .. chunk_id .. "_mesh")
         local vertices_res = go.get("/chunks/meshes#" .. chunk_id .. "_mesh", "vertices")
 
-        local color = vmath.vector3(1, 0.77, 0)
+        local rgb = vmath.vector3(rgbhsl.hslToRgb(hsl.x, hsl.y, hsl.z))
         local pos_x = (j - 10) * off_xy + center_x
-
-        local buf = ext.make_triangle(color.x, color.y, color.z, pos_x, pos_y, scale, angle)
+        local owner_is_lua = true
+        local buf = ext.make_triangle(rgb.x, rgb.y, rgb.z, pos_x, pos_y, scale, angle, owner_is_lua)
         resource.set_buffer(vertices_res, buf)
-        ext.free_buffer(buf)
+        if not owner_is_lua then
+            ext.free_buffer(buf)
+        end
 
         angle = angle + math.pi / 20
 
@@ -32,6 +37,9 @@ function update(self, dt)
             pos_y = pos_y - off_xy
             j = 1
         end
+
+        hsl.x = hsl.x - 0.003
+        if hsl.x < 0 then hsl.x = 1 end
     end
 
     self.angle = self.angle - math.pi / 300
