@@ -90,7 +90,7 @@ max_count = 128
 max_count = 128
 
 [mesh]
-max_count = 200
+max_count = 500
 
 [gui]
 max_count = 64
