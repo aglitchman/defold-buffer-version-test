@@ -17,7 +17,7 @@ title = buffer_version_test
 version = 1.0.0
 
 [mesh]
-max_count = 200
+max_count = 500
 
 [html5]
 scale_mode = fit

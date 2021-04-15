@@ -33,7 +33,7 @@ function M.get_commands()
                 local chunks_lua = ""
 
                 local count = 0
-                for i = 1, 200 do
+                for i = 1, 500 do
                     local id = string.format("c%04d", i)
 
                     collection = collection .. 

@@ -8,7 +8,7 @@ local function update_all_meshes(self)
     local angle = self.angle
     local scale = 16
     local center_x = 480
-    local pos_y = 400
+    local pos_y = 580
     local off_xy = 22
     local j = 1
     for i, chunk_id in ipairs(chunks_ids.chunks) do
