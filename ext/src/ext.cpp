@@ -19,8 +19,7 @@ static dmBuffer::HBuffer GenTriBuf(float r, float g, float b, float t_x, float t
     };
     dmBuffer::HBuffer hbuffer = 0;
     if (dmBuffer::Create(3, streams_decl, 2, &hbuffer) != dmBuffer::RESULT_OK) {
-        dmLogFatal("Can't create buffer: %d, line %d; buffers created %d, freed %d.", r, __LINE__, buffers_created,
-                   buffers_freed);
+        dmLogFatal("Can't create buffer: %d; buffers created %d, freed %d.", r, buffers_created, buffers_freed);
         DbgBreak();
     }
     // dmLogInfo("Created buffer #%u", hbuffer & 0xffff);
@@ -34,13 +33,13 @@ static dmBuffer::HBuffer GenTriBuf(float r, float g, float b, float t_x, float t
     uint32_t stride = 0;
     if (dmBuffer::GetStream(hbuffer, stream_position, (void **)&positions, &count, &components, &stride) !=
         dmBuffer::RESULT_OK) {
-        dmLogFatal("Can't get stream: %d, line %d, buffer #%u; buffers created %d, freed %d.", r, __LINE__,
-                   hbuffer & 0xffff, buffers_created, buffers_freed);
+        dmLogFatal("Can't get stream 'position': %d, buffer #%u; buffers created %d, freed %d.", r, hbuffer & 0xffff,
+                   buffers_created, buffers_freed);
         DbgBreak();
     }
     if (dmBuffer::GetStream(hbuffer, stream_color, (void **)&colors, NULL, NULL, NULL) != dmBuffer::RESULT_OK) {
-        dmLogFatal("Can't get stream: %d, line %d, buffer #%u; buffers created %d, freed %d.", r, __LINE__,
-                   hbuffer & 0xffff, buffers_created, buffers_freed);
+        dmLogFatal("Can't get stream 'color': %d, buffer #%u; buffers created %d, freed %d.", r, hbuffer & 0xffff,
+                   buffers_created, buffers_freed);
         DbgBreak();
     }
 
