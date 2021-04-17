@@ -24,10 +24,11 @@ jobs:
           mkdir -p build/bundle
           curl -s 'http://d.defold.com/stable/info.json' | python3 -c "import sys, json; print('https://d.defold.com/archive/' + json.load(sys.stdin)['sha1'] + '/bob/bob.jar')" | wget --progress=dot:mega -i - -O build/bundle/bob.jar
           java -jar build/bundle/bob.jar --email foo@bar.com --auth 12345 --texture-compression true --bundle-output build/bundle/js-web --build-report-html build/bundle/report.html --platform js-web --archive --variant debug resolve build bundle
-          mv build/bundle/report.html build/bundle/js-web/buffer_version_test/
+          mv build/bundle/js-web/* build/bundle/public
+          mv build/bundle/report.html build/bundle/public/
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@4.1.1
         with:
           branch: gh-pages
-          folder: build/bundle/js-web/buffer_version_test
+          folder: build/bundle/public
