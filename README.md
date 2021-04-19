@@ -1,4 +1,4 @@
-# Buffer Test for Defold 1.2.181
+# Buffer Test for Defold 1.2.182 BETA
 
 HTML5 build - https://aglitchman.github.io/defold-buffer-version-test/
 
